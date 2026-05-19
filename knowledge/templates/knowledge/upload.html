@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html lang="en" class="h-full">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Upload VTU course PDFs to Flux — your VTU AI academic assistant.">
+    <title>Flux | VTU AI Assistant</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: { sans: ['Inter', 'system-ui', 'sans-serif'] },
+                    colors: {
+                        brand: {
+                            400: '#818cf8',
+                            500: '#6366f1',
+                            600: '#4f46e5',
+                            700: '#4338ca',
+                        },
+                    },
+                    boxShadow: {
+                        glow: '0 0 80px -20px rgba(99, 102, 241, 0.35)',
+                    },
+                },
+            },
+        };
+    </script>
+    <style>
+        .mesh {
+            background-color: #030712;
+            background-image:
+                radial-gradient(at 27% 37%, rgba(99, 102, 241, 0.15) 0, transparent 50%),
+                radial-gradient(at 97% 21%, rgba(139, 92, 246, 0.1) 0, transparent 50%);
+        }
+        .upload-form p {
+            margin-bottom: 1.25rem;
+        }
+        .upload-form label {
+            display: block;
+            font-size: 0.8125rem;
+            font-weight: 500;
+            color: #cbd5e1;
+            margin-bottom: 0.5rem;
+        }
+        .upload-form input[type="text"],
+        .upload-form input[type="file"],
+        .upload-form select {
+            width: 100%;
+            padding: 0.75rem 1rem;
+            border-radius: 0.75rem;
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            background: rgba(15, 23, 42, 0.6);
+            color: #f1f5f9;
+            font-size: 0.9375rem;
+            outline: none;
+            transition: border-color 0.2s, box-shadow 0.2s;
+        }
+        .upload-form input[type="text"]:focus,
+        .upload-form select:focus {
+            border-color: rgba(99, 102, 241, 0.5);
+            box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.15);
+        }
+        .upload-form input[type="file"] {
+            padding: 0.625rem;
+            cursor: pointer;
+        }
+        .upload-form input[type="file"]::file-selector-button {
+            margin-right: 1rem;
+            padding: 0.5rem 1rem;
+            border-radius: 0.5rem;
+            border: none;
+            background: rgba(99, 102, 241, 0.2);
+            color: #c7d2fe;
+            font-size: 0.8125rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+        .upload-form input[type="file"]::file-selector-button:hover {
+            background: rgba(99, 102, 241, 0.35);
+        }
+        .upload-form ul.errorlist {
+            list-style: none;
+            padding: 0;
+            margin: 0.5rem 0 0;
+            font-size: 0.8125rem;
+            color: #f87171;
+        }
+        .upload-card {
+            border: 1px solid transparent;
+            background:
+                linear-gradient(rgba(15, 23, 42, 0.85), rgba(15, 23, 42, 0.85)) padding-box,
+                linear-gradient(135deg, rgba(99,102,241,0.35), rgba(139,92,246,0.15), rgba(255,255,255,0.05)) border-box;
+        }
+        .upload-card:hover {
+            border-color: rgba(99, 102, 241, 0.25);
+            box-shadow: 0 0 60px -20px rgba(99, 102, 241, 0.2);
+        }
+        .btn-upload {
+            background: linear-gradient(135deg, #4f46e5, #6366f1);
+            transition: opacity 0.2s, transform 0.15s, box-shadow 0.2s;
+            box-shadow: 0 4px 14px rgba(99, 102, 241, 0.35);
+        }
+        .btn-upload:hover {
+            opacity: 0.95;
+            transform: translateY(-1px);
+            box-shadow: 0 6px 20px rgba(99, 102, 241, 0.45);
+        }
+        .btn-upload:active {
+            transform: translateY(0);
+        }
+    </style>
+</head>
+<body class="mesh h-full min-h-screen text-slate-100 font-sans antialiased selection:bg-brand-500/30">
+
+<div class="flex min-h-screen">
+
+    <!-- Sidebar -->
+    <aside class="hidden md:flex w-64 shrink-0 flex-col border-r border-white/[0.06] bg-gray-950/80">
+        <div class="p-4 border-b border-white/[0.06]">
+            <a href="{% url 'landing' %}" class="flex items-center gap-2.5 group">
+                <span class="flex h-8 w-8 items-center justify-center rounded-lg bg-gradient-to-br from-brand-500 to-violet-600 text-white text-sm font-bold shadow-lg shadow-brand-600/20 group-hover:scale-105 transition-transform">F</span>
+                <div>
+                    <span class="font-semibold text-white text-sm block leading-tight">Flux</span>
+                    <span class="text-[10px] text-slate-500 uppercase tracking-wider">VTU AI Academic Assistant</span>
+                </div>
+            </a>
+        </div>
+        <nav class="flex-1 p-3 space-y-1">
+            <a href="{% url 'chat' %}" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-slate-400 hover:text-white hover:bg-white/[0.04] text-sm transition-colors">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"/></svg>
+                Chat
+            </a>
+            <a href="{% url 'upload' %}" class="flex items-center gap-3 px-3 py-2.5 rounded-lg bg-white/[0.06] text-white text-sm font-medium border border-white/[0.06]">
+                <svg class="w-4 h-4 text-brand-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"/></svg>
+                Upload PDF
+            </a>
+        </nav>
+        <div class="p-4 border-t border-white/[0.06]">
+            <p class="text-xs text-slate-500 leading-relaxed">Index VTU lecture notes and textbooks for syllabus-aligned Q&amp;A in chat.</p>
+        </div>
+    </aside>
+
+    <!-- Main -->
+    <main class="flex-1 flex flex-col min-w-0">
+
+        <header class="shrink-0 flex items-center justify-between gap-4 px-4 sm:px-6 h-14 border-b border-white/[0.06] bg-gray-950/90 backdrop-blur-xl">
+            <div class="flex items-center gap-3 min-w-0">
+                <a href="{% url 'landing' %}" class="md:hidden flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-gradient-to-br from-brand-500 to-violet-600 text-white text-xs font-bold">F</a>
+                <div>
+                    <h1 class="text-base sm:text-lg font-semibold text-white truncate">Upload document</h1>
+                    <p class="text-xs text-slate-500 hidden sm:block">Flux · VTU AI Academic Assistant</p>
+                </div>
+            </div>
+            <a href="{% url 'chat' %}" class="shrink-0 text-xs font-medium text-brand-400 hover:text-brand-300 px-3 py-1.5 rounded-lg border border-brand-500/30 bg-brand-500/10 transition-colors">
+                Open chat
+            </a>
+        </header>
+
+        <div class="flex-1 px-4 sm:px-6 py-8 sm:py-12 overflow-y-auto">
+            <div class="max-w-xl mx-auto w-full">
+
+                <div class="text-center mb-8 sm:mb-10">
+                    <p class="inline-flex items-center gap-2 rounded-full border border-brand-500/30 bg-brand-500/10 px-3 py-1 text-xs text-brand-200 mb-4">
+                        VTU course materials
+                    </p>
+                    <h2 class="text-2xl sm:text-3xl font-bold text-white tracking-tight mb-2">Add a VTU study PDF</h2>
+                    <p class="text-sm text-slate-400 max-w-md mx-auto leading-relaxed">
+                        Upload lecture slides, unit notes, or textbook chapters. Flux indexes them so you can ask syllabus-aligned questions in chat.
+                    </p>
+                </div>
+
+                <!-- Instructions -->
+                <div class="mb-6 rounded-xl border border-white/[0.06] bg-gray-900/40 backdrop-blur-sm p-4 sm:p-5">
+                    <h3 class="text-sm font-semibold text-white mb-3 flex items-center gap-2">
+                        <svg class="w-4 h-4 text-brand-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                        How to upload
+                    </h3>
+                    <ol class="text-sm text-slate-400 space-y-2 list-decimal list-inside leading-relaxed">
+                        <li>Select your <span class="text-slate-300">VTU project</span> (or course folder).</li>
+                        <li>Give the document a clear <span class="text-slate-300">title</span> (e.g. “OS Unit 3 — Scheduling”).</li>
+                        <li>Choose a <span class="text-slate-300">PDF file</span> from your device.</li>
+                        <li>Click <span class="text-slate-300">Upload</span>, then open chat to start asking questions.</li>
+                    </ol>
+                </div>
+
+                <!-- Upload card -->
+                <div class="upload-card rounded-2xl p-6 sm:p-8 backdrop-blur-xl transition-all duration-300">
+                    <form method="POST" enctype="multipart/form-data" class="upload-form">
+
+                        {% csrf_token %}
+
+                        {{ form.as_p }}
+
+                        <button type="submit" class="btn-upload w-full mt-6 py-3 rounded-xl text-white font-semibold text-sm">
+                            Upload
+                        </button>
+                    </form>
+                </div>
+
+                <p class="mt-6 text-center text-xs text-slate-500">
+                    PDF only · Processing may take a moment for large VTU textbooks
+                </p>
+
+                <div class="mt-8 flex flex-col sm:flex-row items-center justify-center gap-3">
+                    <a href="{% url 'chat' %}" class="inline-flex items-center justify-center gap-2 text-sm font-medium text-brand-400 hover:text-brand-300 transition-colors">
+                        Go to chat
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7l5 5m0 0l-5 5m5-5H6"/></svg>
+                    </a>
+                    <span class="hidden sm:inline text-slate-600">·</span>
+                    <a href="{% url 'landing' %}" class="text-sm text-slate-500 hover:text-slate-300 transition-colors">
+                        Back to home
+                    </a>
+                </div>
+            </div>
+        </div>
+    </main>
+</div>
+
+</body>
+</html>
